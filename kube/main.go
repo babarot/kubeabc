@@ -11,54 +11,52 @@ import (
 	"github.com/b4b4r07/kubetools/kube/command"
 )
 
-var (
-	subcommands = []string{
-		"create",
-		"expose",
-		"run",
-		"run-container",
-		"set",
-		"get",
-		"explain",
-		"edit",
-		"delete",
-		"rollout",
-		"rolling-update",
-		"rollingupdate",
-		"scale",
-		"resize",
-		"autoscale",
-		"certificate",
-		"cluster-info",
-		"clusterinfo",
-		"top",
-		"cordon",
-		"uncordon",
-		"drain",
-		"taint",
-		"describe",
-		"logs",
-		"attach",
-		"exec",
-		"port-forward",
-		"proxy",
-		"cp",
-		"auth",
-		"apply",
-		"patch",
-		"replace",
-		"update",
-		"convert",
-		"label",
-		"annotate",
-		"completion",
-		"api-versions",
-		"config",
-		"help",
-		"plugin",
-		"version",
-	}
-)
+var subcommands = []string{
+	"create",
+	"expose",
+	"run",
+	"run-container",
+	"set",
+	"get",
+	"explain",
+	"edit",
+	"delete",
+	"rollout",
+	"rolling-update",
+	"rollingupdate",
+	"scale",
+	"resize",
+	"autoscale",
+	"certificate",
+	"cluster-info",
+	"clusterinfo",
+	"top",
+	"cordon",
+	"uncordon",
+	"drain",
+	"taint",
+	"describe",
+	"logs",
+	"attach",
+	"exec",
+	"port-forward",
+	"proxy",
+	"cp",
+	"auth",
+	"apply",
+	"patch",
+	"replace",
+	"update",
+	"convert",
+	"label",
+	"annotate",
+	"completion",
+	"api-versions",
+	"config",
+	"help",
+	"plugin",
+	"version",
+}
 
 func main() {
 	os.Exit(_main(os.Args[1:]))
@@ -73,9 +71,17 @@ func _main(args []string) int {
 		return run("kubectl", args)
 	}
 
-	if path, err := searchCommand(args[0]); err == nil {
-		// Found user-defined command
-		return runWithTTY(path, args[1:])
+	cmds := searchCommands(args[0])
+	switch len(cmds) {
+	case 0:
+		// through
+	case 1:
+		return runWithTTY(cmds[0], args[1:])
+	default:
+		fmt.Fprintf(os.Stderr,
+			"Some commands are found: %q",
+			cmds)
+		return 1
 	}
 
 	subs := similarCommands(args[0])
@@ -89,7 +95,9 @@ func _main(args []string) int {
 		args[0] = subs[0]
 		return run("kubectl", args)
 	default:
-		fmt.Fprintf(os.Stderr, "%s: no such command\nThe most similar commands are %q", args[0], subs)
+		fmt.Fprintf(os.Stderr,
+			"%s: no such command\nThe most similar commands are %q",
+			args[0], subs)
 		return 1
 	}
 
@@ -133,31 +141,32 @@ func runWithTTY(arg string, args []string) int {
 	return 0
 }
 
-func searchCommand(cmd string) (path string, err error) {
+func searchCommands(arg string) (cmds []string) {
 	prefixes := []string{
 		"kube", "kube-", "kubectl-",
 	}
 	for _, prefix := range prefixes {
-		if path, err = exec.LookPath(prefix + cmd); err != nil {
+		cmd := prefix + arg
+		if _, err := exec.LookPath(cmd); err != nil {
 			continue
 		}
-		return path, nil
+		cmds = append(cmds, cmd)
 	}
-	return "", fmt.Errorf("%s: no such command", cmd)
+	return cmds
 }
 
-func similarCommands(arg string) (found []string) {
+func similarCommands(arg string) (cmds []string) {
 	var max float64
-	for _, sub := range subcommands {
-		score := round(levenshtein.Similarity(sub, arg, nil) * 100)
+	for _, cmd := range subcommands {
+		score := round(levenshtein.Similarity(cmd, arg, nil) * 100)
 		if score >= max {
 			max = score
 			if score > 65 {
-				found = append(found, sub)
+				cmds = append(cmds, cmd)
 			}
 		}
 	}
-	return found
+	return cmds
 }
 
 func round(f float64) float64 {
