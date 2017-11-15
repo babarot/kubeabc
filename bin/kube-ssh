@@ -1,0 +1,19 @@
+#!/bin/bash
+
+pod="$1"
+
+if [[ -z $pod ]]; then
+    echo "pod name is required" >&2
+    exit 1
+fi
+
+res="$(kubectl exec -it "$pod" bash 2>&1)"
+if [[ $? -eq 0 ]]; then
+    echo "$res"
+    exit 0
+fi
+
+# in case of no bash command
+echo "sh"
+kubectl exec -it "$pod" sh
+exit $?

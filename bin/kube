@@ -133,8 +133,8 @@ BEGIN {
 
 {
     # calculates the degree of similarity
-    if ( (1 - leven_dist($0, search_string) / (length($NF) + length(search_string))) * 100 >= 75 ) {
-        # When the degree of similarity of search_string is greater than or equal to 70%,
+    if ( (1 - leven_dist($0, search_string) / length(search_string))) * 100 >= 65 ) {
+        # When the degree of similarity of search_string is greater than or equal to 65%,
         # to display the candidate path
         print $0
     }
