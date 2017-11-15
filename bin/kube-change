@@ -1,0 +1,3 @@
+#!/bin/bash
+
+kubectx $(kubectx | fzy) >/dev/null
