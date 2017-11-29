@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/agext/levenshtein"
 	"github.com/b4b4r07/kubetools/kube/command"
@@ -173,6 +177,11 @@ func contains(s []string, e string) bool {
 }
 
 func run(arg string, args []string) int {
+	switch args[0] {
+	case "apply", "delete":
+		prompt()
+	default:
+	}
 	c := command.New(command.Join(arg, args))
 	if err := c.Run(); err != nil {
 		// Unexpected error
@@ -243,4 +252,20 @@ func similarResources(arg string) (results []string) {
 
 func round(f float64) float64 {
 	return math.Floor(f + .5)
+}
+
+func prompt() {
+	file := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	config, err := clientcmd.LoadFromFile(file)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Press Return key to continue\n-> current context %q", config.CurrentContext)
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		break
+	}
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
 }
