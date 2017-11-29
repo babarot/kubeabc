@@ -58,11 +58,69 @@ var subcommands = []string{
 	"version",
 }
 
+var resources = []string{
+	"all",
+	"certificatesigningrequests", "certificatesigningrequest", "csr",
+	"clusterrolebindings", "clusterrolebinding",
+	"clusterroles", "clusterroles",
+	"clusters", "cluster",
+	"componentstatuses", "componentstatus", "cs",
+	"configmaps", "configmap", "cm",
+	"controllerrevisions", "controllerrevision",
+	"cronjobs", "cronjob",
+	"daemonsets", "daemonset", "ds",
+	"deployments", "deployment", "deploy",
+	"endpoints", "endpoint", "ep",
+	"events", "event", "ev",
+	"horizontalpodautoscalers", "horizontalpodautoscalers", "hpa",
+	"ingresses", "ingress", "ing",
+	"jobs", "job",
+	"limitranges", "limitrange", "limits",
+	"namespaces", "namespace", "ns",
+	"networkpolicies", "networkpolicy", "netpol",
+	"nodes", "node", "no",
+	"persistentvolumeclaims", "persistentvolumeclaim", "pvc",
+	"persistentvolumes", "persistentvolume", "pv",
+	"poddisruptionbudgets", "poddisruptionbudget", "pdb",
+	"podpreset",
+	"pods", "pod", "po",
+	"podsecuritypolicies", "podsecuritypolicy", "psp",
+	"podtemplates", "podtemplate",
+	"replicasets", "replicaset", "rs",
+	"replicationcontrollers", "replicationcontroller", "rc",
+	"resourcequotas", "resourcequotas", "quota",
+	"rolebindings", "rolebinding",
+	"roles", "role",
+	"secrets", "secret",
+	"serviceaccounts", "serviceaccount", "sa",
+	"services", "service", "svc",
+	"statefulsets", "statefulset",
+	"storageclasses", "storageclass",
+	"thirdpartyresources", "thirdpartyresource",
+}
+
 func main() {
 	os.Exit(_main(os.Args[1:]))
 }
 
 func _main(args []string) int {
+	if len(args) > 1 {
+		results := similarResources(args[1])
+		switch len(results) {
+		case 0:
+			// through
+		case 1:
+			fmt.Fprintf(os.Stdout,
+				"You called a k8s resource named '%s', which does not exist.\nContinuing under the assumption that you meant '%s'\n",
+				args[1], results[0])
+			args[1] = results[0]
+		default:
+			fmt.Fprintf(os.Stderr,
+				"%s: no such resource\nThe most similar resources are %q\n",
+				args[0], results)
+		}
+	}
+
 	if args[0] == "kubectl" {
 		return run("kubectl", args[1:])
 	}
@@ -141,7 +199,7 @@ func runWithTTY(arg string, args []string) int {
 	return 0
 }
 
-func searchCommands(arg string) (cmds []string) {
+func searchCommands(arg string) (results []string) {
 	prefixes := []string{
 		"kube", "kube-", "kubectl-",
 	}
@@ -150,23 +208,37 @@ func searchCommands(arg string) (cmds []string) {
 		if _, err := exec.LookPath(cmd); err != nil {
 			continue
 		}
-		cmds = append(cmds, cmd)
+		results = append(results, cmd)
 	}
-	return cmds
+	return
 }
 
-func similarCommands(arg string) (cmds []string) {
+func similarCommands(arg string) (results []string) {
 	var max float64
 	for _, cmd := range subcommands {
 		score := round(levenshtein.Similarity(cmd, arg, nil) * 100)
 		if score >= max {
 			max = score
 			if score > 65 {
-				cmds = append(cmds, cmd)
+				results = append(results, cmd)
 			}
 		}
 	}
-	return cmds
+	return
+}
+
+func similarResources(arg string) (results []string) {
+	var max float64
+	for _, resource := range resources {
+		score := round(levenshtein.Similarity(resource, arg, nil) * 100)
+		if score >= max {
+			max = score
+			if score > 65 {
+				results = append(results, resource)
+			}
+		}
+	}
+	return
 }
 
 func round(f float64) float64 {
