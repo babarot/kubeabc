@@ -1,0 +1,3 @@
+#!/bin/bash
+
+kube--ns $(kube--ns | fzf --height 30 --reverse --ansi) >/dev/null

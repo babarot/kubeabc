@@ -1,0 +1,3 @@
+#!/bin/bash
+
+kube--ctx $(kube--ctx | fzf --height 30 --reverse --ansi) >/dev/null
