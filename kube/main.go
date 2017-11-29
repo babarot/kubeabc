@@ -79,7 +79,7 @@ func _main(args []string) int {
 		return runWithTTY(cmds[0], args[1:])
 	default:
 		fmt.Fprintf(os.Stderr,
-			"Some commands are found: %q",
+			"Some commands are found: %q\n",
 			cmds)
 		return 1
 	}
@@ -96,7 +96,7 @@ func _main(args []string) int {
 		return run("kubectl", args)
 	default:
 		fmt.Fprintf(os.Stderr,
-			"%s: no such command\nThe most similar commands are %q",
+			"%s: no such command\nThe most similar commands are %q\n",
 			args[0], subs)
 		return 1
 	}
