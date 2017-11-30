@@ -110,18 +110,20 @@ func main() {
 func _main(args []string) int {
 	if len(args) > 1 {
 		results := similarResources(args[1])
-		switch len(results) {
-		case 0:
-			// through
-		case 1:
-			fmt.Fprintf(os.Stdout,
-				"You called a k8s resource named '%s', which does not exist.\nContinuing under the assumption that you meant '%s'\n",
-				args[1], results[0])
-			args[1] = results[0]
-		default:
-			fmt.Fprintf(os.Stderr,
-				"%s: no such resource\nThe most similar resources are %q\n",
-				args[0], results)
+		if !contains(results, args[1]) {
+			switch len(results) {
+			case 0:
+				// through
+			case 1:
+				fmt.Fprintf(os.Stdout,
+					"You called a k8s resource named '%s', which does not exist.\nContinuing under the assumption that you meant '%s'\n",
+					args[1], results[0])
+				args[1] = results[0]
+			default:
+				fmt.Fprintf(os.Stderr,
+					"%s: no such resource\nThe most similar resources are %q\n",
+					args[0], results)
+			}
 		}
 	}
 
