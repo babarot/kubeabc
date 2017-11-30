@@ -108,6 +108,10 @@ func main() {
 }
 
 func _main(args []string) int {
+	if len(args) == 0 {
+		return run("kubectl", []string{"help"})
+	}
+
 	if len(args) > 1 {
 		results := similarResources(args[1])
 		if !contains(results, args[1]) {
