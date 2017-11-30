@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/agext/levenshtein"
-	"github.com/b4b4r07/kubetools/kube/command"
+	"github.com/b4b4r07/kubeabc/kube/command"
 )
 
 var subcommands = []string{
